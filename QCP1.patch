@@ -1,0 +1,73 @@
+diff -crB qcustomplot/qcustomplot.cpp qcustomplotnew/qcustomplot.cpp
+*** qcustomplot/qcustomplot.cpp	2015-12-22 08:02:50.000000000 +0800
+--- qcustomplotnew/qcustomplot.cpp	2018-09-12 23:15:36.784147453 +0800
+***************
+*** 12148,12153 ****
+--- 12148,12155 ----
+    
+    // pass update call on to inset layout (doesn't happen automatically, because QCPAxisRect doesn't derive from QCPLayout):
+    mInsetLayout->update(phase);
++   
++   emit layoutElementRectSizeChanged();
+  }
+  
+  /* inherits documentation from base class */
+***************
+*** 12869,12877 ****
+    painter->setPen(QPen(getTextColor()));
+    QSizeF iconSize = mParentLegend->iconSize();
+    QRectF textRect = painter->fontMetrics().boundingRect(0, 0, 0, iconSize.height(), Qt::TextDontClip, mPlottable->name());
+!   QRectF iconRect(mRect.topLeft(), iconSize);
+!   int textHeight = qMax(textRect.height(), iconSize.height());  // if text has smaller height than icon, center text vertically in icon height, else align tops
+!   painter->drawText(mRect.x()+iconSize.width()+mParentLegend->iconTextPadding(), mRect.y(), textRect.width(), textHeight, Qt::TextDontClip, mPlottable->name());
+    // draw icon:
+    painter->save();
+    painter->setClipRect(iconRect, Qt::IntersectClip);
+--- 12871,12892 ----
+    painter->setPen(QPen(getTextColor()));
+    QSizeF iconSize = mParentLegend->iconSize();
+    QRectF textRect = painter->fontMetrics().boundingRect(0, 0, 0, iconSize.height(), Qt::TextDontClip, mPlottable->name());
+! 
+!   /////commented and added by htallon 20160614 
+!   
+!   //QRectF iconRect(mRect.topLeft(), iconSize);
+!   //   int textHeight = qMax(textRect.height(), iconSize.height());  // if text has smaller height than icon, center text vertically in icon height, else align tops
+!   //   painter->drawText(mRect.x()+iconSize.width()+mParentLegend->iconTextPadding(), mRect.y(), textRect.width(), textHeight, Qt::TextDontClip, mPlottable->name());
+!   
+!   QPointF iconTopLeft;
+!   double maxHeight = qMax(textRect.height(), iconSize.height());
+!   iconTopLeft.setX(mRect.x());
+!   iconTopLeft.setY(mRect.y()+(maxHeight-iconSize.height())/2);
+!   QRectF iconRect(iconTopLeft, iconSize);
+!   painter->drawText(mRect.x()+iconSize.width()+mParentLegend->iconTextPadding(), mRect.y()+(maxHeight-textRect.height())/2, textRect.width(), textRect.height(), Qt::TextDontClip, mPlottable->name());
+!   
+!   /////commented and added by htallon 20160614 above
+!   
+    // draw icon:
+    painter->save();
+    painter->setClipRect(iconRect, Qt::IntersectClip);
+diff -crB qcustomplot/qcustomplot.h qcustomplotnew/qcustomplot.h
+*** qcustomplot/qcustomplot.h	2015-12-22 08:02:50.000000000 +0800
+--- qcustomplotnew/qcustomplot.h	2018-09-12 23:15:36.782147522 +0800
+***************
+*** 684,689 ****
+--- 684,692 ----
+    // reimplemented virtual methods:
+    virtual double selectTest(const QPointF &pos, bool onlySelectable, QVariant *details=0) const;
+    
++ signals:
++     void layoutElementRectSizeChanged();
++     
+  protected:
+    // property members:
+    QCPLayout *mParentLayout;
+***************
+*** 2039,2044 ****
+--- 2042,2048 ----
+    virtual void update(UpdatePhase phase);
+    virtual QList<QCPLayoutElement*> elements(bool recursive) const;
+  
++   
+  protected:
+    // property members:
+    QBrush mBackgroundBrush;
